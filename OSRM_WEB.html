@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STUDY WITH JOGJA LIBRARY - WebGIS Perpustakaan Jogja</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Font Awesome untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ===== VARIABLES & RESET ===== */
+        :root {
+            --primary: #2C5F2D; /* Hijau tua elegan */
+            --secondary: #FF9B50; /* Oren hangat */
+            --accent: #8B4513; /* Coklat kayu */
+            --light: #FFF9F0; /* Krem sangat muda */
+            --dark: #1A3C2E; /* Hijau gelap */
+            --gray: #E8E2D9; /* Abu-abu krem */
+            --text: #333333;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', 'Poppins', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, var(--light) 0%, #f5f1e8 100%);
+            color: var(--text);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* ===== SIDEBAR STYLING ===== */
+        #sidebar { 
+            width: 450px; 
+            background: white;
+            border-right: 1px solid var(--gray);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            overflow: hidden;
+        }
+        
+        .sidebar-header {
+            background: linear-gradient(to right, var(--primary), var(--dark));
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+            border-bottom: 4px solid var(--secondary);
+        }
+        
+        .sidebar-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .sidebar-header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-style: italic;
+            font-weight: 300;
+        }
+        
+        .sidebar-content {
+            padding: 25px 30px;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        /* ===== SECTION STYLING ===== */
+        .section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 22px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--gray);
+            transition: var(--transition);
+        }
+        
+        .section:hover {
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary);
+            font-size: 1.2rem;
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary);
+            font-weight: 600;
+        }
+        
+        .section-title i {
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+        
+        /* ===== FORM ELEMENTS ===== */
+        .control-group {
+            margin-bottom: 18px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 14px 15px;
+            border: 2px solid var(--gray);
+            border-radius: 8px;
+            background: white;
+            font-size: 1rem;
+            color: var(--text);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232C5F2D' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(255, 155, 80, 0.2);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .input-group input {
+            flex: 1;
+        }
+        
+        /* ===== BUTTONS ===== */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .btn-small-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        button {
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary), #3a7d3c);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(to right, var(--dark), var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(44, 95, 45, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(to right, var(--secondary), #FFB347);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(to right, #FF8C33, var(--secondary));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 155, 80, 0.3);
+        }
+        
+        .btn-accent {
+            background: linear-gradient(to right, #4A90E2, #357ABD);
+            color: white;
+        }
+        
+        .btn-accent:hover {
+            background: linear-gradient(to right, #357ABD, #2C6AA3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, #E74C3C, #C0392B);
+            color: white;
+            margin-top: 5px;
+        }
+        
+        .btn-danger:hover {
+            background: linear-gradient(to right, #C0392B, #A93226);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        /* ===== LOADING SPINNER ===== */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ===== PLACES LIST ===== */
+        #places-list {
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .place-item {
+            padding: 14px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            background: var(--light);
+            border-left: 4px solid var(--primary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .place-item:hover {
+            background: white;
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid var(--secondary);
+        }
+        
+        .place-item i {
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+        
+        .place-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+        
+        .place-distance {
+            font-size: 0.8rem;
+            color: #666;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        /* ===== SELECTED STOPS ===== */
+        #stops-info {
+            background: linear-gradient(135deg, #f8f4ec 0%, #f0e9dd 100%);
+            padding: 18px;
+            border-radius: var(--radius);
+            border: 1px dashed var(--accent);
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--accent);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .stop-counter {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            line-height: 28px;
+            border-radius: 50%;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        /* ===== TABLE STYLING ===== */
+        .table-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid var(--gray);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        
+        th {
+            background: linear-gradient(to bottom, var(--primary), var(--dark));
+            color: white;
+            padding: 12px 8px;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #fff5eb;
+        }
+        
+        /* ===== MAP CONTAINER ===== */
+        #map { 
+            flex: 1; 
+            height: 100vh;
+            z-index: 1;
+        }
+        
+        /* ===== USER LOCATION MARKER ===== */
+        .user-location-marker {
+            background-color: #4A90E2;
+            border: 3px solid white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            box-shadow: 0 0 10px rgba(74, 144, 226, 0.7);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(74, 144, 226, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(74, 144, 226, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(74, 144, 226, 0); }
+        }
+        
+        /* ===== ROUTE STYLING ===== */
+        .route-popup {
+            font-size: 0.9rem;
+        }
+        
+        /* ===== SCROLLBAR STYLING ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark);
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            #sidebar {
+                width: 400px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            
+            #sidebar {
+                width: 100%;
+                height: 50vh;
+                border-right: none;
+                border-bottom: 1px solid var(--gray);
+            }
+            
+            #map {
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <div class="sidebar-header">
+        <h1><i class="fas fa-map-marked-alt"></i> STUDY WITH JOGJA LIBRARY</h1>
+        <p>"Temukan Perpustakaan Terdekat di Yogyakarta"</p>
+    </div>
+    
+    <div class="sidebar-content">
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-user-location"></i>
+                <span>Lokasi Pengguna</span>
+            </div>
+            
+            <div class="btn-group">
+                <button id="btn-locate" class="btn-accent">
+                    <i class="fas fa-location-crosshairs"></i> Deteksi Lokasi Saya
+                </button>
+                <div class="input-group">
+                    <input type="text" id="lat-input" placeholder="Latitude (contoh: -7.798)">
+                    <input type="text" id="lng-input" placeholder="Longitude (contoh: 110.370)">
+                </div>
+                <div class="btn-small-group">
+                    <button id="btn-set-coords" class="btn-primary btn-small">
+                        <i class="fas fa-map-pin"></i> Set Koordinat
+                    </button>
+                    <button id="btn-add-user-loc" class="btn-secondary btn-small">
+                        <i class="fas fa-plus"></i> Tambah ke Rute
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-route"></i>
+                <span>Navigasi Perjalanan</span>
+            </div>
+            
+            <div class="control-group">
+                <label for="profile"><i class="fas fa-car"></i> Mode Transportasi:</label>
+                <select id="profile">
+                    <option value="driving">🚗 Mobil (Driving)</option>
+                    <option value="cycling">🚴 Sepeda (Cycling)</option>
+                    <option value="walking">🚶 Jalan Kaki (Walking)</option>
+                </select>
+            </div>
+            
+            <div class="btn-group">
+                <button id="btn-matrix" class="btn-primary">
+                    <i class="fas fa-table"></i> Hitung OD Matrix
+                </button>
+                <button id="btn-trip" class="btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Optimasi Rute (TSP)
+                </button>
+                <button id="btn-simple-route" class="btn-accent">
+                    <i class="fas fa-route"></i> Rute Sederhana
+                </button>
+                <button id="clear" class="btn-danger">
+                    <i class="fas fa-trash-alt"></i> Hapus Semua
+                </button>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-book"></i>
+                <span>Daftar Perpustakaan</span>
+            </div>
+            <div id="places-list"></div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-map-pin"></i>
+                <span>Waypoints Terpilih</span>
+            </div>
+            <div id="stops-info">
+                <i class="fas fa-info-circle"></i> Klik pada peta atau daftar perpustakaan untuk menambahkan titik.
+                <br><br>
+                <span class="stop-counter">0</span> titik terpilih
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">
+                <i class="fas fa-clock"></i>
+                <span>OD Matrix (Dalam Menit)</span>
+            </div>
+            <div id="matrix-container" class="table-container">
+                <p style="text-align: center; color: #777; padding: 20px;">
+                    <i class="fas fa-table fa-2x"></i><br>
+                    Data matriks akan muncul di sini
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Leaflet Polyline Decorator untuk panah -->
+<script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+
+<script>
+    // 1. Inisialisasi Peta
+    const map = L.map("map", {
+        zoomControl: true,
+        attributionControl: true
+    }).setView([-7.79, 110.39], 13);
+
+    // Basemap
+    const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { 
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+    });
+    
+    const googleSat = L.tileLayer('http://{s}.google.com/vt?lyrs=s&x={x}&y={y}&z={z}', { 
+        subdomains: ['mt0','mt1','mt2','mt3'], 
+        attribution: 'Google Satellite',
+        maxZoom: 20
+    });
+    
+    const googleTerrain = L.tileLayer('http://{s}.google.com/vt?lyrs=p&x={x}&y={y}&z={z}', { 
+        subdomains: ['mt0','mt1','mt2','mt3'], 
+        attribution: 'Google Terrain',
+        maxZoom: 20
+    });
+    
+    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        maxZoom: 20
+    });
+    
+    osm.addTo(map);
+    
+    const baseMaps = {
+        "OpenStreetMap": osm,
+        "Peta Terang": cartoLight,
+        "Google Satellite": googleSat,
+        "Google Terrain": googleTerrain
+    };
+    
+    L.control.layers(baseMaps, null, {
+        collapsed: false,
+        position: 'topright'
+    }).addTo(map);
+
+    // 2. Data Perpustakaan
+    const perpustakaan = [
+        { name: "Perpustakaan Yos Sudarso - UPN Veteran Yogyakarta", lat: -7.758429, lng: 110.409985, icon: "university" },
+        { name: "Perpustakaan Universitas Kampus II Mercubuana Yogyakarta", lat: -7.762037, lng: 110.394326, icon: "university" },
+        { name: "Perpustakaan UIN Sunan Kalijaga Yogyakarta", lat: -7.780438, lng: 110.401367, icon: "university" },
+        { name: "Grhatama Pustaka", lat: -7.799077, lng: 110.407133, icon: "library" },
+        { name: "Jogja Library Center", lat: -7.789529, lng: 110.365931, icon: "library" },
+        { name: "Perpustakaan Kota Jogja", lat: -7.782364, lng: 110.374273, icon: "library" },
+        { name: "Perpustakaan Universitas Negeri Yogyakarta", lat: -7.775801, lng: 110.387591, icon: "university" },
+        { name: "Perpustakaan dan Arsip Universitas Gadjah Mada", lat: -7.769144, lng: 110.378062, icon: "university" }
+    ];
+
+    // 3. Variabel global
+    let userLocation = null;
+    let userMarker = null;
+    let userLocationCircle = null;
+    let waypoints = [];
+    let routeLayer = null;
+    let routeMarkers = [];
+    
+    // Base URL untuk OSRM (menggunakan yang lebih stabil)
+    const osrmBaseUrl = "https://router.project-osrm.org";
+    // Alternatif OSRM server jika yang utama bermasalah
+    const osrmAltUrl = "https://routing.openstreetmap.de/routed-car";
+    
+    // 4. Fungsi utilitas
+    function createCustomIcon(type) {
+        const iconType = type === 'library' ? 'book' : type === 'university' ? 'graduation-cap' : 'user';
+        const color = type === 'library' ? '#2C5F2D' : type === 'university' ? '#4A90E2' : '#FF9B50';
+        
+        return L.divIcon({
+            html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);">
+                      <i class="fas fa-${iconType}"></i>
+                   </div>`,
+            className: 'custom-marker',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17]
+        });
+    }
+
+    function createUserLocationIcon() {
+        return L.divIcon({
+            html: `<div class="user-location-marker"></div>`,
+            className: 'user-location-icon',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+    }
+
+    function showLoading(button, text = "Memproses...") {
+        button.innerHTML = `<div class="spinner"></div> ${text}`;
+        button.disabled = true;
+    }
+
+    function hideLoading(button, originalHtml) {
+        button.innerHTML = originalHtml;
+        button.disabled = false;
+    }
+
+    // 5. Render Daftar Perpustakaan
+    const listDiv = document.getElementById('places-list');
+    perpustakaan.forEach((p, index) => {
+        const customIcon = createCustomIcon(p.icon);
+        const marker = L.marker([p.lat, p.lng], { icon: customIcon })
+            .addTo(map)
+            .bindPopup(`<b>${p.name}</b><br><small>Klik untuk tambah ke rute</small>`);
+        
+        const item = document.createElement('div');
+        item.className = 'place-item';
+        item.innerHTML = `
+            <i class="fas fa-${p.icon === 'library' ? 'book' : 'graduation-cap'}"></i>
+            <span class="place-name">${p.name}</span>
+            <span class="place-distance" id="dist-${index}">-</span>
+        `;
+        item.onclick = () => addWaypoint({lat: p.lat, lng: p.lng, name: p.name});
+        listDiv.appendChild(item);
+    });
+
+    // 6. Fungsi Lokasi Pengguna
+    document.getElementById("btn-locate").addEventListener("click", locateUser);
+    
+    async function locateUser() {
+        const locateBtn = document.getElementById("btn-locate");
+        const originalHtml = locateBtn.innerHTML;
+        showLoading(locateBtn, "Mendeteksi...");
+        
+        if (!navigator.geolocation) {
+            alert("Geolocation tidak didukung oleh browser Anda");
+            hideLoading(locateBtn, originalHtml);
+            return;
+        }
+        
+        try {
+            const position = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            });
+            
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            document.getElementById("lat-input").value = lat.toFixed(6);
+            document.getElementById("lng-input").value = lng.toFixed(6);
+            
+            userLocation = { lat, lng };
+            updateUserMarker(lat, lng, position.coords.accuracy);
+            
+            map.setView([lat, lng], 15);
+            calculateDistancesToLibraries(lat, lng);
+            
+            hideLoading(locateBtn, originalHtml);
+            alert(`✅ Lokasi berhasil dideteksi!\nLatitude: ${lat.toFixed(6)}\nLongitude: ${lng.toFixed(6)}`);
+        } catch (error) {
+            hideLoading(locateBtn, originalHtml);
+            handleGeolocationError(error);
+        }
+    }
+
+    function updateUserMarker(lat, lng, accuracy = 50) {
+        if (userMarker) map.removeLayer(userMarker);
+        if (userLocationCircle) map.removeLayer(userLocationCircle);
+        
+        userMarker = L.marker([lat, lng], {
+            icon: createUserLocationIcon(),
+            zIndexOffset: 1000
+        }).addTo(map);
+        
+        userMarker.bindPopup(`<b>📍 Lokasi Anda</b><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`);
+        
+        userLocationCircle = L.circle([lat, lng], {
+            color: '#4A90E2',
+            fillColor: '#4A90E2',
+            fillOpacity: 0.1,
+            radius: accuracy
+        }).addTo(map);
+    }
+
+    function handleGeolocationError(error) {
+        let message = "Gagal mendeteksi lokasi. ";
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                message += "Izin lokasi ditolak. Izinkan akses lokasi di pengaturan browser.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                message += "Informasi lokasi tidak tersedia.";
+                break;
+            case error.TIMEOUT:
+                message += "Permintaan lokasi timeout.";
+                break;
+            default:
+                message += "Error tidak diketahui.";
+        }
+        alert(message);
+    }
+
+    // 7. Fungsi Hitung Jarak
+    function calculateDistancesToLibraries(userLat, userLng) {
+        perpustakaan.forEach((lib, index) => {
+            const distance = calculateHaversineDistance(userLat, userLng, lib.lat, lib.lng);
+            const distanceElement = document.getElementById(`dist-${index}`);
+            if (distanceElement) {
+                distanceElement.textContent = `${distance.toFixed(1)} km`;
+                // Warna berdasarkan jarak
+                if (distance < 2) distanceElement.style.backgroundColor = '#d4edda';
+                else if (distance < 5) distanceElement.style.backgroundColor = '#fff3cd';
+                else distanceElement.style.backgroundColor = '#f8d7da';
+            }
+        });
+    }
+
+    function calculateHaversineDistance(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLng = (lng2 - lng1) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    // 8. Set Koordinat Manual
+    document.getElementById("btn-set-coords").addEventListener("click", setManualCoordinates);
+    
+    function setManualCoordinates() {
+        const latInput = document.getElementById("lat-input").value.trim();
+        const lngInput = document.getElementById("lng-input").value.trim();
+        
+        if (!latInput || !lngInput) {
+            alert("Masukkan latitude dan longitude terlebih dahulu!");
+            return;
+        }
+        
+        const lat = parseFloat(latInput.replace(',', '.'));
+        const lng = parseFloat(lngInput.replace(',', '.'));
+        
+        if (isNaN(lat) || isNaN(lng)) {
+            alert("Format koordinat tidak valid! Gunakan angka dengan titik desimal.");
+            return;
+        }
+        
+        if (lat < -90 || lat > 90) {
+            alert("Latitude harus antara -90 sampai 90 derajat!");
+            return;
+        }
+        
+        if (lng < -180 || lng > 180) {
+            alert("Longitude harus antara -180 sampai 180 derajat!");
+            return;
+        }
+        
+        userLocation = { lat, lng };
+        updateUserMarker(lat, lng);
+        map.setView([lat, lng], 15);
+        calculateDistancesToLibraries(lat, lng);
+        
+        alert(`✅ Lokasi berhasil diatur!\nLatitude: ${lat.toFixed(6)}\nLongitude: ${lng.toFixed(6)}`);
+    }
+
+    // 9. Tambah Lokasi Pengguna ke Rute
+    document.getElementById("btn-add-user-loc").addEventListener("click", () => {
+        if (!userLocation) {
+            alert("Atur atau deteksi lokasi Anda terlebih dahulu!");
+            return;
+        }
+        addWaypoint({
+            lat: userLocation.lat,
+            lng: userLocation.lng,
+            name: "📍 Lokasi Saya"
+        });
+    });
+
+    // 10. Fungsi Tambah Waypoint
+    map.on("click", (e) => addWaypoint(e.latlng));
+
+    function addWaypoint(latlng, name = "Titik Baru") {
+        const isUserLocation = name === "📍 Lokasi Saya";
+        const markerColor = isUserLocation ? '#4A90E2' : '#FF9B50';
+        
+        const marker = L.marker([latlng.lat, latlng.lng], {
+            draggable: true,
+            icon: L.divIcon({
+                html: `<div style="background-color: ${markerColor}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; font-weight: bold;">
+                         ${waypoints.length + 1}
+                       </div>`,
+                className: 'waypoint-marker',
+                iconSize: [28, 28],
+                iconAnchor: [14, 14]
+            })
+        }).addTo(map);
+        
+        const wpObj = { 
+            lat: latlng.lat, 
+            lng: latlng.lng, 
+            name: name,
+            marker: marker,
+            isUserLocation: isUserLocation
+        };
+        waypoints.push(wpObj);
+        
+        marker.bindPopup(`<b>${name}</b><br>Posisi: ${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`);
+        
+        marker.on("dragend", () => {
+            const newPos = marker.getLatLng();
+            wpObj.lat = newPos.lat;
+            wpObj.lng = newPos.lng;
+            marker.setPopupContent(`<b>${name}</b><br>Posisi: ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}`);
+            
+            if (isUserLocation) {
+                userLocation = { lat: newPos.lat, lng: newPos.lng };
+                document.getElementById("lat-input").value = newPos.lat.toFixed(6);
+                document.getElementById("lng-input").value = newPos.lng.toFixed(6);
+            }
+        });
+
+        updateStopsList();
+    }
+
+    function updateStopsList() {
+        const stopsInfo = document.getElementById("stops-info");
+        const counter = stopsInfo.querySelector(".stop-counter");
+        counter.textContent = waypoints.length;
+        
+        if (waypoints.length > 0) {
+            let list = `<div style="text-align: left; margin-top: 10px;"><small><b>Titik yang dipilih:</b></small><br>`;
+            waypoints.forEach((wp, i) => {
+                const iconColor = wp.isUserLocation ? '#4A90E2' : '#FF9B50';
+                const icon = wp.isUserLocation ? 'fa-user' : 'fa-map-marker-alt';
+                list += `<div style="padding: 5px 0; border-bottom: 1px dashed #ddd; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                            <span style="background-color: ${iconColor}; color: white; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.7rem;">${i+1}</span>
+                            <i class="fas ${icon}" style="color: ${iconColor};"></i> 
+                            <span style="flex: 1;">${wp.name || `Titik ${i+1}`}</span>
+                         </div>`;
+            });
+            list += `</div>`;
+            stopsInfo.innerHTML = `<i class="fas fa-map-marked-alt"></i> <b>${waypoints.length} titik terpilih</b>` + list;
+        } else {
+            stopsInfo.innerHTML = `<i class="fas fa-info-circle"></i> Klik pada peta atau daftar perpustakaan untuk menambahkan titik.<br><br><span class="stop-counter">0</span> titik terpilih`;
+        }
+    }
+
+    // 11. OD Matrix
+    document.getElementById("btn-matrix").addEventListener("click", calculateODMatrix);
+    
+    async function calculateODMatrix() {
+        if (waypoints.length < 2) {
+            alert("Pilih minimal 2 lokasi untuk menghitung matriks!");
+            return;
+        }
+        
+        const btnMatrix = document.getElementById("btn-matrix");
+        const originalHtml = btnMatrix.innerHTML;
+        showLoading(btnMatrix, "Menghitung...");
+        
+        const coords = waypoints.map(w => `${w.lng},${w.lat}`).join(";");
+        const profile = document.getElementById("profile").value;
+        
+        try {
+            const url = `${osrmBaseUrl}/table/v1/${profile}/${coords}?annotations=duration,distance`;
+            const response = await fetchWithTimeout(url, 30000);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.code === "Ok" && data.durations) {
+                displayMatrix(data);
+            } else {
+                throw new Error(data.message || "Gagal menghitung matriks");
+            }
+        } catch (error) {
+            console.error("Error fetching matrix:", error);
+            alert(`Gagal menghitung matriks: ${error.message}\nCoba lagi atau kurangi jumlah titik.`);
+        } finally {
+            hideLoading(btnMatrix, originalHtml);
+        }
+    }
+
+    function displayMatrix(data) {
+        let table = "<table><thead><tr><th>Dari/Ke</th>";
+        
+        // Header
+        for (let i = 0; i < waypoints.length; i++) {
+            const shortName = waypoints[i].name.length > 15 ? 
+                waypoints[i].name.substring(0, 12) + "..." : 
+                waypoints[i].name;
+            table += `<th title="${waypoints[i].name}">${i+1}. ${shortName}</th>`;
+        }
+        table += "</tr></thead><tbody>";
+        
+        // Data
+        for (let i = 0; i < data.durations.length; i++) {
+            table += `<tr><th title="${waypoints[i].name}">${i+1}</th>`;
+            for (let j = 0; j < data.durations[i].length; j++) {
+                const duration = data.durations[i][j];
+                const distance = data.distances ? data.distances[i][j] : null;
+                
+                if (duration === 0) {
+                    table += `<td style="background-color: #f8f9fa; color: #6c757d;">-</td>`;
+                } else {
+                    const minutes = (duration/60).toFixed(1);
+                    const colorIntensity = Math.min(0.2 + (duration/3600) * 0.8, 1);
+                    const tooltip = distance ? 
+                        `Waktu: ${minutes} menit<br>Jarak: ${(distance/1000).toFixed(1)} km` :
+                        `Waktu: ${minutes} menit`;
+                    
+                    table += `<td style="background-color: rgba(255, 155, 80, ${colorIntensity});" title="${tooltip}">
+                                ${minutes}
+                              </td>`;
+                }
+            }
+            table += "</tr>";
+        }
+        table += "</tbody></table>";
+        
+        document.getElementById("matrix-container").innerHTML = table;
+    }
+
+    // 12. Optimasi Rute TSP (FIXED)
+    document.getElementById("btn-trip").addEventListener("click", optimizeTSPRoute);
+    
+    async function optimizeTSPRoute() {
+        if (waypoints.length < 3) {
+            alert("Pilih minimal 3 lokasi untuk optimasi rute!");
+            return;
+        }
+        
+        if (waypoints.length > 10) {
+            if (!confirm(`Anda memiliki ${waypoints.length} titik. Optimasi dengan banyak titik mungkin lambat atau gagal. Lanjutkan?`)) {
+                return;
+            }
+        }
+        
+        const btnTrip = document.getElementById("btn-trip");
+        const originalHtml = btnTrip.innerHTML;
+        showLoading(btnTrip, "Mengoptimasi...");
+        
+        const coords = waypoints.map(w => `${w.lng},${w.lat}`).join(";");
+        const profile = document.getElementById("profile").value;
+        
+        try {
+            // Coba URL utama dulu
+            let url = `${osrmBaseUrl}/trip/v1/${profile}/${coords}?roundtrip=true&source=first&geometries=geojson&overview=full`;
+            
+            console.log("Mencoba URL TSP:", url);
+            
+            const response = await fetchWithTimeout(url, 45000);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.code === "Ok" && data.trips && data.trips[0]) {
+                displayOptimizedRoute(data);
+            } else {
+                console.error("Data TSP tidak valid:", data);
+                throw new Error(data.message || "Rute tidak ditemukan");
+            }
+        } catch (error) {
+            console.error("Error TSP utama:", error);
+            
+            // Coba alternatif: rute berurutan
+            if (confirm("Optimasi TSP gagal. Coba buat rute berurutan antar titik?")) {
+                await createSequentialRoute();
+            } else {
+                alert(`Gagal mengoptimasi rute: ${error.message}\nCoba kurangi jumlah titik atau gunakan mode transportasi lain.`);
+            }
+        } finally {
+            hideLoading(btnTrip, originalHtml);
+        }
+    }
+
+    function displayOptimizedRoute(data) {
+        // Hapus rute lama
+        clearRoute();
+        
+        const trip = data.trips[0];
+        const geometry = trip.geometry;
+        const duration = (trip.duration / 60).toFixed(1);
+        const distance = (trip.distance / 1000).toFixed(1);
+        
+        // Buat rute
+        routeLayer = L.geoJSON(geometry, {
+            style: {
+                color: "#FF9B50",
+                weight: 6,
+                opacity: 0.8,
+                lineCap: 'round',
+                lineJoin: 'round'
+            }
+        }).addTo(map);
+        
+        // Tambahkan panah arah
+        L.polylineDecorator(geometry, {
+            patterns: [{
+                offset: 25,
+                repeat: 100,
+                symbol: L.Symbol.arrowHead({
+                    pixelSize: 15,
+                    pathOptions: {
+                        fillOpacity: 0.8,
+                        color: '#2C5F2D',
+                        weight: 0
+                    }
+                })
+            }]
+        }).addTo(map);
+        
+        // Tambahkan marker urutan
+        routeMarkers = [];
+        if (trip.waypoints) {
+            trip.waypoints.forEach((wp, index) => {
+                const marker = L.marker([wp.location[1], wp.location[0]], {
+                    icon: L.divIcon({
+                        html: `<div style="background-color: #2C5F2D; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white;">
+                                 ${index + 1}
+                               </div>`,
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 14]
+                    })
+                }).addTo(map);
+                
+                const waypointIndex = wp.waypoint_index;
+                const waypointName = waypoints[waypointIndex]?.name || `Titik ${waypointIndex + 1}`;
+                marker.bindPopup(`<b>Perhentian ${index + 1}</b><br>${waypointName}`);
+                routeMarkers.push(marker);
+            });
+        }
+        
+        // Fit bounds
+        map.fitBounds(routeLayer.getBounds());
+        
+        // Tampilkan info
+        const routeInfo = `✅ <b>Rute Optimal Ditemukan!</b><br>
+                          📏 <b>Jarak Total:</b> ${distance} km<br>
+                          ⏱️ <b>Waktu Tempuh:</b> ${duration} menit<br>
+                          📍 <b>Jumlah Titik:</b> ${waypoints.length} lokasi<br>
+                          🔄 <b>Tipe:</b> Round Trip`;
+        
+        const popup = L.popup()
+            .setLatLng([waypoints[0].lat, waypoints[0].lng])
+            .setContent(routeInfo)
+            .openOn(map);
+        
+        // Update UI
+        document.getElementById("matrix-container").innerHTML = `
+            <div style="padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <h4 style="margin-top: 0; color: #2C5F2D;">📊 Hasil Optimasi Rute</h4>
+                <p><strong>Jarak Total:</strong> ${distance} km</p>
+                <p><strong>Waktu Tempuh:</strong> ${duration} menit</p>
+                <p><strong>Jumlah Titik:</strong> ${waypoints.length}</p>
+                <p><strong>Mode:</strong> ${document.getElementById("profile").options[document.getElementById("profile").selectedIndex].text}</p>
+            </div>`;
+    }
+
+    // 13. Rute Sederhana (Alternatif)
+    document.getElementById("btn-simple-route").addEventListener("click", createSequentialRoute);
+    
+    async function createSequentialRoute() {
+        if (waypoints.length < 2) {
+            alert("Pilih minimal 2 lokasi untuk membuat rute!");
+            return;
+        }
+        
+        const btnRoute = document.getElementById("btn-simple-route");
+        const originalHtml = btnRoute.innerHTML;
+        showLoading(btnRoute, "Membuat rute...");
+        
+        try {
+            // Hapus rute lama
+            clearRoute();
+            
+            const profile = document.getElementById("profile").value;
+            let totalDistance = 0;
+            let totalDuration = 0;
+            let allCoordinates = [];
+            
+            // Buat rute antar titik secara berurutan
+            for (let i = 0; i < waypoints.length - 1; i++) {
+                const start = waypoints[i];
+                const end = waypoints[i + 1];
+                
+                const url = `${osrmBaseUrl}/route/v1/${profile}/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+                
+                const response = await fetchWithTimeout(url, 15000);
+                const data = await response.json();
+                
+                if (data.code === "Ok" && data.routes[0]) {
+                    const route = data.routes[0];
+                    totalDistance += route.distance;
+                    totalDuration += route.duration;
+                    
+                    // Tambahkan geometri rute
+                    const geometry = data.routes[0].geometry;
+                    if (geometry && geometry.coordinates) {
+                        if (i === 0) {
+                            allCoordinates = geometry.coordinates;
+                        } else {
+                            // Gabungkan koordinat, hilangkan titik pertama yang sama dengan titik terakhir sebelumnya
+                            allCoordinates = [...allCoordinates, ...geometry.coordinates.slice(1)];
+                        }
+                    }
+                } else {
+                    throw new Error(`Gagal mendapatkan rute dari titik ${i+1} ke ${i+2}`);
+                }
+            }
+            
+            // Buat polyline dari semua koordinat
+            if (allCoordinates.length > 0) {
+                const routeFeature = {
+                    type: "Feature",
+                    geometry: {
+                        type: "LineString",
+                        coordinates: allCoordinates
+                    }
+                };
+                
+                routeLayer = L.geoJSON(routeFeature, {
+                    style: {
+                        color: "#4A90E2",
+                        weight: 6,
+                        opacity: 0.8,
+                        lineCap: 'round',
+                        lineJoin: 'round'
+                    }
+                }).addTo(map);
+                
+                // Tambahkan marker urutan
+                routeMarkers = waypoints.map((wp, index) => {
+                    const marker = L.marker([wp.lat, wp.lng], {
+                        icon: L.divIcon({
+                            html: `<div style="background-color: #4A90E2; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white;">
+                                     ${index + 1}
+                                   </div>`,
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 14]
+                        })
+                    }).addTo(map);
+                    
+                    marker.bindPopup(`<b>Perhentian ${index + 1}</b><br>${wp.name}`);
+                    return marker;
+                });
+                
+                // Fit bounds
+                const bounds = routeLayer.getBounds();
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds);
+                }
+                
+                // Tampilkan info
+                const routeInfo = `✅ <b>Rute Berurutan Dibuat!</b><br>
+                                  📏 <b>Jarak Total:</b> ${(totalDistance/1000).toFixed(1)} km<br>
+                                  ⏱️ <b>Waktu Tempuh:</b> ${(totalDuration/60).toFixed(1)} menit<br>
+                                  📍 <b>Jumlah Titik:</b> ${waypoints.length} lokasi`;
+                
+                L.popup()
+                    .setLatLng([waypoints[0].lat, waypoints[0].lng])
+                    .setContent(routeInfo)
+                    .openOn(map);
+                
+                // Update UI
+                document.getElementById("matrix-container").innerHTML = `
+                    <div style="padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                        <h4 style="margin-top: 0; color: #4A90E2;">📊 Rute Berurutan</h4>
+                        <p><strong>Jarak Total:</strong> ${(totalDistance/1000).toFixed(1)} km</p>
+                        <p><strong>Waktu Tempuh:</strong> ${(totalDuration/60).toFixed(1)} menit</p>
+                        <p><strong>Jumlah Titik:</strong> ${waypoints.length}</p>
+                        <p><strong>Mode:</strong> ${document.getElementById("profile").options[document.getElementById("profile").selectedIndex].text}</p>
+                        <p><small><i>Rute mengikuti urutan titik yang dipilih</i></small></p>
+                    </div>`;
+            }
+            
+        } catch (error) {
+            console.error("Error creating sequential route:", error);
+            alert(`Gagal membuat rute: ${error.message}`);
+        } finally {
+            hideLoading(btnRoute, originalHtml);
+        }
+    }
+
+    // 14. Fungsi Bantuan
+    function clearRoute() {
+        if (routeLayer) {
+            map.removeLayer(routeLayer);
+            routeLayer = null;
+        }
+        routeMarkers.forEach(marker => map.removeLayer(marker));
+        routeMarkers = [];
+    }
+
+    async function fetchWithTimeout(url, timeout = 10000) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
+        try {
+            const response = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            return response;
+        } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+        }
+    }
+
+    // 15. Reset Data
+    document.getElementById("clear").addEventListener("click", () => {
+        // Hapus waypoints kecuali lokasi pengguna
+        waypoints.forEach(w => {
+            if (!w.isUserLocation) {
+                map.removeLayer(w.marker);
+            }
+        });
+        
+        waypoints = waypoints.filter(w => w.isUserLocation);
+        
+        // Hapus rute
+        clearRoute();
+        
+        // Reset UI
+        document.getElementById("matrix-container").innerHTML = `
+            <p style="text-align: center; color: #777; padding: 20px;">
+                <i class="fas fa-table fa-2x"></i><br>
+                Data matriks akan muncul di sini
+            </p>`;
+        
+        updateStopsList();
+    });
+
+    // 16. Inisialisasi
+    updateStopsList();
+    L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+    
+    // Event listener untuk input koordinat
+    document.getElementById("lat-input").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") setManualCoordinates();
+    });
+    
+    document.getElementById("lng-input").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") setManualCoordinates();
+    });
+    
+    // Tambahkan info ke console untuk debugging
+    console.log("STUDY WITH JOGJA LIBRARY - WebGIS initialized");
+    console.log("Jumlah perpustakaan:", perpustakaan.length);
+</script>
+
+</body>
+</html>
